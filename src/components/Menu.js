@@ -10,8 +10,11 @@ function Menu() {
         <li>
           <Link to="/blue">Blue</Link>
         </li>
+        <li>
+          <Link to="/users">Users</Link>
+        </li>
       </ui>
     );
 }
 
-export default Menu
+export default Menu;
