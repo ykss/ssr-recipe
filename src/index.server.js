@@ -5,11 +5,13 @@ import { StaticRouter } from "react-router-dom";
 import App from "./App";
 import path from "path";
 import fs from "fs";
-import rootReducer from "./modules";
+import rootReducer, { rootSaga } from "./modules";
 import { createStore, applyMiddleware } from "redux";
 import thunk from "redux-thunk";
 import { Provider } from "react-redux";
 import PreloadContext from "./lib/PreloadContext";
+import createSagaMiddleware from "redux-saga";
+import { END } from "redux-saga";
 
 const manifest = JSON.parse(
   fs.readFileSync(path.resolve("./build/asset-manifest.json"), "utf8")
@@ -52,7 +54,13 @@ const app = express();
 
 const serverRender = async (req, res, next) => {
   const context = {};
-  const store = createStore(rootReducer, applyMiddleware(thunk));
+  const sagaMiddleware = createSagaMiddleware();
+  const store = createStore(
+    rootReducer,
+    applyMiddleware(thunk, sagaMiddleware)
+  );
+
+  const sagaPromise = sagaMiddleware.run(rootSaga).toPromise();
 
   const preloadContext = {
     done: false,
@@ -68,8 +76,10 @@ const serverRender = async (req, res, next) => {
     </PreloadContext.Provider>
   );
 
-  ReactDOMServer.renderToStaticMarkup(jsx);
-  try {
+    ReactDOMServer.renderToStaticMarkup(jsx);
+    store.dispatch(END)
+    try {
+        await sagaPromise;
     await Promise.all(preloadContext.promises);
   } catch (e) {
     return res.status(500);
@@ -80,6 +90,7 @@ const serverRender = async (req, res, next) => {
   const stateScript = `<script>__PRELOADED_STATE__= ${stateString}</script>`;
   res.send(createPage(root, stateScript));
 };
+
 const serve = express.static(path.resolve("./build"), {
   index: false,
 });
