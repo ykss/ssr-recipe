@@ -1,4 +1,5 @@
 import axios from "axios";
+import { call, put, takeEvery } from "redux-saga/effects";
 
 const GET_USERS_PENDING = "users/GET_USERS_PENDING";
 const GET_USERS_SUCCESS = "users/GET_USERS_SUCCESS";
@@ -15,6 +16,13 @@ const getUsersFailure = (payload) => ({
   error: true,
   payload,
 });
+export const getUser = (id) => ({ type: GET_USER, payload: id });
+const getUserSuccess = (data) => ({ type: GET_USER_SUCCESS, payload: data });
+const getUserFailure = (error) => ({
+  type: GET_USER_FAILURE,
+  payload: error,
+  error: true,
+});
 
 export const getUsers = () => async (dispatch) => {
   try {
@@ -28,6 +36,21 @@ export const getUsers = () => async (dispatch) => {
     throw e;
   }
 };
+const getUserById = (id) =>
+  axios.get(`https://jsonplaceholder.typicode.com/users/${id}`);
+
+function* getUserSaga(action) {
+  try {
+    const response = yield call(getUserById, action.payload);
+    yield put(getUserSuccess(response.data));
+  } catch (e) {
+    yield put(getUserFailure(e));
+  }
+}
+
+export function* usersSaga() {
+  yield takeEvery(GET_USER, getUserSaga);
+}
 
 const initialState = {
   users: null,
