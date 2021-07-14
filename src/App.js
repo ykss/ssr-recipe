@@ -1,18 +1,20 @@
 import './App.css';
 import Menu from './components/Menu';
-import RedPages from './pages/RedPages';
-import BluePages from './pages/BluePages';
 import { Route } from 'react-router-dom';
-import UsersPage from './pages/UsersPage';
+import loadable from '@loadable/component';
+
+const RedPage = loadable(() => import('./pages/RedPages'));
+const BluePage = loadable(() => import('./pages/BluePages'));
+const UserPage = loadable(()=> import('./pages/UsersPage'))
 
 function App() {
   return (
     <div className="App">
       <Menu />
       <hr />
-      <Route path='/red' component={RedPages}/>
-      <Route path='/blue' component={BluePages} />
-      <Route path='/users' component={UsersPage}/>
+      <Route path="/red" component={RedPage} />
+      <Route path="/blue" component={BluePage} />
+      <Route path="/users" component={UserPage} />
     </div>
   );
 }

@@ -9,19 +9,31 @@ import { createStore, applyMiddleware, } from "redux";
 import thunk from "redux-thunk";
 import { Provider } from 'react-redux';
 import createSagaMiddleware from "redux-saga";
+import { loadableReady } from "@loadable/component";
 
 const sagaMiddleware = createSagaMiddleware();
 
 const store = createStore(rootReducer, window.__PRELOADED_STATE__,applyMiddleware(thunk, sagaMiddleware));
 sagaMiddleware.run(rootSaga);
 
-ReactDOM.render(
-  <Provider store={store}>
+const Root = () => {
+  return (
+    <Provider store={store}>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </Provider>,
-  document.getElementById("root")
-);
+  </Provider>
+  )
+}
+
+const root = document.getElementById('root')
+
+if (process.env.NODE_ENV === 'production') {
+  loadableReady(() => {
+    ReactDOM.hydrate(<Root />, root);
+  });
+} else {
+  ReactDOM.render(<Root />, root);
+}
 
 // serviceWorker.unregister();
